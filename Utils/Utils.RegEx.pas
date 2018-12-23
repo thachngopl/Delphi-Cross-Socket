@@ -15,7 +15,7 @@ uses
   System.RegularExpressions, System.RegularExpressionsCore;
 
 type
-  TMatchEvaluatorProc = reference to function(const Match: TMatch): string;
+  TMatchEvaluatorProc = reference to function(const AMatch: TMatch): string;
 
   IScopeEvaluator = interface
     function GetMatchEvaluator: TMatchEvaluator;
@@ -27,7 +27,7 @@ type
   private
     FMatchEvaluatorProc: TMatchEvaluatorProc;
 
-    function MatchEvaluator(const Match: TMatch): string;
+    function MatchEvaluator(const AMatch: TMatch): string;
     function GetMatchEvaluator: TMatchEvaluator;
   public
     constructor Create(AMatchEvaluatorProc: TMatchEvaluatorProc);
@@ -54,10 +54,10 @@ begin
   Result := Self.MatchEvaluator;
 end;
 
-function TScopeEvaluator.MatchEvaluator(const Match: TMatch): string;
+function TScopeEvaluator.MatchEvaluator(const AMatch: TMatch): string;
 begin
   if Assigned(FMatchEvaluatorProc) then
-    Result := FMatchEvaluatorProc(Match);
+    Result := FMatchEvaluatorProc(AMatch);
 end;
 
 { TRegExHelper }

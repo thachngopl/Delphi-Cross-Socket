@@ -12,7 +12,7 @@ unit Linux.epoll;
 interface
 
 uses
-  Posix.Base;
+  Posix.Base, Posix.Signal;
 
 const
   EPOLLIN  = $01; { The associated file is available for read(2) operations. }
@@ -39,7 +39,7 @@ type
   TEPoll_Data =  Epoll_Data;
   PEPoll_Data = ^Epoll_Data;
 
-  EPoll_Event = packed record
+  EPoll_Event = {$IFDEF CPUX64}packed {$ENDIF}record
     Events: Cardinal;
     Data  : TEpoll_Data;
   end;
@@ -61,6 +61,11 @@ function epoll_ctl(epfd, op, fd: Integer; event: pepoll_event): Integer; cdecl;
 function epoll_wait(epfd: Integer; events: pepoll_event; maxevents, timeout: Integer): Integer; cdecl;
   external libc name _PU + 'epoll_wait';
   {$EXTERNALSYM epoll_wait}
+
+{ create a file descriptor for event notification }
+function eventfd(initval: Cardinal; flags: Integer): Integer; cdecl;
+  external libc name _PU + 'eventfd';
+  {$EXTERNALSYM eventfd}
 
 implementation
 

@@ -127,13 +127,25 @@ type
     ///   获取套接字参数
     /// </summary>
     class function GetSockOpt(ASocket: THandle; ALevel, AOptionName: Integer;
-       var AOptionValue; var AOptionLen: Integer): Integer; static;
+       var AOptionValue; var AOptionLen: Integer): Integer; overload; static;
+
+    /// <summary>
+    ///   获取套接字参数
+    /// </summary>
+    class function GetSockOpt<T>(ASocket: THandle; ALevel, AOptionName: Integer;
+       var AOptionValue: T): Integer; overload; static;
 
     /// <summary>
     ///   设置套接字参数
     /// </summary>
     class function SetSockOpt(ASocket: THandle; ALevel, AOptionName: Integer;
-      const AOptionValue; AOptionLen: Integer): Integer; static;
+      const AOptionValue; AOptionLen: Integer): Integer; overload; static;
+
+    /// <summary>
+    ///   设置套接字参数
+    /// </summary>
+    class function SetSockOpt<T>(ASocket: THandle; ALevel, AOptionName: Integer;
+      const AOptionValue: T): Integer; overload; static;
 
     /// <summary>
     ///   检查套接字错误码
@@ -173,7 +185,7 @@ type
     /// <summary>
     ///   设置Linger参数(在closesocket()调用, 但是还有数据没发送完毕时容许逗留的秒数)
     /// </summary>
-    class function SetLinger(ASocket: THandle; ALinger: Integer): Integer; static;
+    class function SetLinger(ASocket: THandle; const AOnOff: Boolean; ALinger: Integer): Integer; static;
 
     /// <summary>
     ///   设置广播SO_BROADCAST
@@ -521,6 +533,14 @@ begin
   {$ENDIF}
 end;
 
+class function TSocketAPI.GetSockOpt<T>(ASocket: THandle; ALevel,
+  AOptionName: Integer; var AOptionValue: T): Integer;
+var
+  LOptionLen: Integer;
+begin
+  Result := GetSockOpt(ASocket, ALevel, AOptionName, AOptionValue, LOptionLen);
+end;
+
 class function TSocketAPI.IsValidSocket(ASocket: THandle): Boolean;
 begin
   Result := (ASocket <> INVALID_HANDLE_VALUE);
@@ -623,19 +643,15 @@ begin
 end;
 
 class function TSocketAPI.SetLinger(ASocket: THandle;
-  ALinger: Integer): Integer;
+  const AOnOff: Boolean; ALinger: Integer): Integer;
 var
   LLinger: linger;
 begin
-  if (ALinger > 0) then
-  begin
-    LLinger.l_onoff := 1;
-    LLinger.l_linger := ALinger;
-  end else
-  begin
+  if AOnOff then
+    LLinger.l_onoff := 1
+  else
     LLinger.l_onoff := 0;
-    LLinger.l_linger := 0;
-  end;
+  LLinger.l_linger := ALinger;
   Result := SetSockOpt(ASocket, SOL_SOCKET, SO_LINGER, LLinger, SizeOf(linger));
 end;
 
@@ -706,6 +722,12 @@ begin
   {$ELSE}
   Result := Net.Winsock2.setsockopt(ASocket, ALevel, AOptionName, PAnsiChar(@AOptionValue), AOptionLen);
   {$ENDIF}
+end;
+
+class function TSocketAPI.SetSockOpt<T>(ASocket: THandle; ALevel,
+  AOptionName: Integer; const AOptionValue: T): Integer;
+begin
+  Result := SetSockOpt(ASocket, ALevel, AOptionName, AOptionValue, SizeOf(T));
 end;
 
 class function TSocketAPI.SetTcpNoDelay(ASocket: THandle;
